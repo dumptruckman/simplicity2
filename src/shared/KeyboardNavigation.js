@@ -34,6 +34,8 @@ export default function keyboardNavigation(WrappedReactTable) {
 
       return {
         tabIndex: focused ? 0 : -1,
+        'data-row': rowInfo.viewIndex,
+        'data-col': column.id,
         onClick: (e, handleOriginal) => {
           console.log('A Td Element was clicked!');
           console.log('it has this state:', state);
@@ -51,15 +53,23 @@ export default function keyboardNavigation(WrappedReactTable) {
           }
         },
         onKeyDown: (e) => {
-          if (e.key === 37) { // left
+          console.log(e.target.siblings);
+          if (e.key === 'ArrowLeft') { // left
             focusedCol -= 1;
-          } else if (e.key === 39) { // right
+            if (focusedCol < 0) {
+              focusedCol = this.props.columns.length - 1;
+            }
+          } else if (e.key === 'ArrowRight') { // right
             focusedCol += 1;
-          } else if (e.key === 38) { // up
+            if (focusedCol >= this.props.columns.length) {
+              focusedCol = 0;
+            }
+          } else if (e.key === 'ArrowUp') { // up
             focusedRow -= 1;
-          } else if (e.key === 40) { // down
+          } else if (e.key === 'ArrowDown') { // down
             focusedRow += 1;
           }
+
           this.setState({
             focused: {
               row: focusedRow,
