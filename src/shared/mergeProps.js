@@ -7,6 +7,11 @@
  * @returns {function(...[*])} a new function that create a merged set of props.
  */
 export default function mergeProps(getBaseProps, getAdditionalProps) {
+  if (getBaseProps && !getAdditionalProps) {
+    return getBaseProps;
+  } else if (!getBaseProps && getAdditionalProps) {
+    return getAdditionalProps;
+  }
   return (...args) => mergeObjects(getBaseProps(...args), getAdditionalProps(...args));
 }
 
