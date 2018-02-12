@@ -5,6 +5,9 @@ import { connect } from 'react-redux';
 import ReactTable from 'react-table';
 import Collapsible from '../../shared/Collapsible';
 import { RadioGroup, Radio } from 'react-radio-group';
+import keyboardNavigation from '../../shared/KeyboardNavigation';
+import screenReadable from '../../shared/ScreenReadable';
+import expandingRows from '../../shared/ExpandingRows';
 
 const last4Years = [
   2015,
@@ -103,12 +106,6 @@ const getDataColumns = (level, expenseOrRevenue) => {
 
 const tdProps = () => {
   return {
-    onClick: (e,handleOriginal) => {
-      e.target.parentNode.firstChild.click();
-      if(handleOriginal) {
-        handleOriginal();
-      }
-    },
     style: {
       whiteSpace: 'normal',
     },
@@ -129,6 +126,8 @@ const BudgetDetailsTable = (props) => {
   const refreshLocation = (value) => {
     browserHistory.push([props.location.pathname, '?entity=', props.location.query.entity, '&id=', props.location.query.id, '&label=', props.location.query.label, '&mode=', value, '&hideNavbar=', props.location.query.hideNavbar].join(''));
   };
+
+  const CustomReactTable = keyboardNavigation(screenReadable(expandingRows(ReactTable)));
 
   return (
     <div>
@@ -166,7 +165,7 @@ const BudgetDetailsTable = (props) => {
       <div className="row">
         <div className="col-sm-12">
           <div alt={['Table of', (props.location.query.mode || 'expenditures')].join(' ')}>
-            <ReactTable
+            <CustomReactTable
               data={dataForTable}
               columns={getDataColumns(0, props.location.query.mode)}
               pageSize={dataForTable.length}
@@ -175,7 +174,7 @@ const BudgetDetailsTable = (props) => {
               getTrProps={trProps}
               SubComponent={innerRow1 => (
                 <div style={{ paddingLeft: '34px' }}>
-                  <ReactTable
+                  <CustomReactTable
                     data={dataForTable[innerRow1.index].children}
                     columns={getDataColumns(1, props.location.query.mode)}
                     defaultPageSize={dataForTable[innerRow1.index].children.length}
@@ -184,7 +183,7 @@ const BudgetDetailsTable = (props) => {
                     getTrProps={trProps}
                     SubComponent={innerRow2 => (
                       <div style={{ paddingLeft: '34px' }}>
-                        <ReactTable
+                        <CustomReactTable
                           data={dataForTable[innerRow1.index].children[innerRow2.index].children}
                           columns={getDataColumns(2, props.location.query.mode)}
                           defaultPageSize={dataForTable[innerRow1.index].children[innerRow2.index].children.length}
