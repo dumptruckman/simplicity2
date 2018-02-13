@@ -36,21 +36,31 @@ const getCustomTdProps = () => ({
 });
 
 export default function screenReadable(WrappedReactTable) {
-  const ScreenReadableReactTable = (props) => {
-    const newProps = Object.assign({}, props);
+  class ScreenReadableReactTable extends React.Component {
+    constructor(props) {
+      super(props);
 
-    newProps.getTableProps = mergeProps(getCustomTableProps, props.getTableProps);
-    newProps.getTrGroupProps = mergeProps(getCustomTrGroupProps, props.getTrGroupProps);
-    newProps.getTrProps = mergeProps(getCustomTrProps, props.getTrProps);
-    newProps.getTheadThProps = mergeProps(getCustomTheadThProps, props.getTheadThProps);
-    newProps.getTdProps = mergeProps(getCustomTdProps, props.getTdProps);
+      this.state = {
 
-    return (
-      <WrappedReactTable
-        {...newProps}
-      />
-    );
-  };
+      };
+    }
+
+    render() {
+      const newProps = Object.assign({}, this.props);
+
+      newProps.getTableProps = mergeProps(getCustomTableProps, this.props.getTableProps);
+      newProps.getTrGroupProps = mergeProps(getCustomTrGroupProps, this.props.getTrGroupProps);
+      newProps.getTrProps = mergeProps(getCustomTrProps, this.props.getTrProps);
+      newProps.getTheadThProps = mergeProps(getCustomTheadThProps, this.props.getTheadThProps);
+      newProps.getTdProps = mergeProps(getCustomTdProps, this.props.getTdProps);
+
+      return (
+        <WrappedReactTable
+          {...newProps}
+        />
+      );
+    }
+  }
 
   const myPropTypes = {
     ariaLabel: PropTypes.string,
