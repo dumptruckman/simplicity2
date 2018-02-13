@@ -3,10 +3,6 @@ import PropTypes from 'prop-types';
 import mergeProps from './mergeProps';
 import Methods from 'react-table';
 
-const getCustomTableProps = () => () => ({
-  role: 'grid',
-});
-
 const getCustomTrGroupProps = () => ({
   role: 'rowgroup',
 });
@@ -15,19 +11,7 @@ const getCustomTrProps = () => ({
   role: 'row',
 });
 
-const getCustomTheadThProps = (state, rowInfo, column) => ({
-  onClick: (e, handleOriginal) => {
-    console.log('A Th element was clicked!');
-    console.log('It\'s state is: ', state);
-    console.log('It\'s rowInfo is: ', rowInfo);
-    console.log('It\'s column is: ', column);
-
-    if (handleOriginal) {
-      // This doesn't work the same as getTdProps :(
-      // TODO I need to find another way to have sorting in addition to this onClick.
-      // handleOriginal();
-    }
-  },
+const getCustomTheadThProps = () => ({
   role: 'columnheader',
 });
 
@@ -37,18 +21,34 @@ const getCustomTdProps = () => ({
 
 export default function screenReadable(WrappedReactTable) {
   class ScreenReadableReactTable extends React.Component {
-    constructor(props) {
-      super(props);
+    state = {};
 
-      this.state = {
+    onSortedChange = () => {
+      this.setState({});
+    };
 
+    getCustomTableProps = () => {
+      const props = {
+        role: 'grid',
       };
-    }
+
+      if (this.props.ariaLabel) {
+        props['aria-label'] = this.props.ariaLabel;
+      } else if (this.props.ariaLabelledBy) {
+        props['aria-labelledby'] = this.props.ariaLabelledBy;
+      }
+
+      if (this.props.ariaDescribedBy) {
+        props['aria-describedby'] = this.props.ariaDescribedBy;
+      }
+
+      return props;
+    };
 
     render() {
       const newProps = Object.assign({}, this.props);
 
-      newProps.getTableProps = mergeProps(getCustomTableProps, this.props.getTableProps);
+      newProps.getTableProps = mergeProps(this.getCustomTableProps, this.props.getTableProps);
       newProps.getTrGroupProps = mergeProps(getCustomTrGroupProps, this.props.getTrGroupProps);
       newProps.getTrProps = mergeProps(getCustomTrProps, this.props.getTrProps);
       newProps.getTheadThProps = mergeProps(getCustomTheadThProps, this.props.getTheadThProps);

@@ -46,24 +46,26 @@ const getChangeHeader = () => (
   <div>Change from <br /> past year</div>
 );
 
+const getDataColumnHeader = (level, expenseOrRevenue) => () => {
+  switch (level) {
+    case 0:
+      if (expenseOrRevenue === 'expenditures') {
+        return 'Budget Section';
+      }
+      return 'Budget Category';
+    case 1:
+      return 'Department';
+    case 2:
+      return 'Division';
+    case 3:
+      return 'Account';
+    default:
+      return 'Grouping';
+  }
+};
+
 const getDataColumns = (level, expenseOrRevenue) => {
-  const theHeader = () => {
-    switch (level) {
-      case 0:
-        if (expenseOrRevenue === 'expenditures') {
-          return 'Budget Section';
-        }
-        return 'Budget Category';
-      case 1:
-        return 'Department';
-      case 2:
-        return 'Division';
-      case 3:
-        return 'Account';
-      default:
-        return 'Grouping';
-    }
-  };
+  const theHeader = getDataColumnHeader(level, expenseOrRevenue);
   const dataColumns = [
     {
       Header: theHeader,
@@ -134,7 +136,7 @@ const BudgetDetailsTable = (props) => {
     <div>
       <div className="row">
         <div className="col-sm-12">
-          <h3>Table of {props.location.query.mode || 'expenditures'}</h3>
+          <h3 id={'budget-details-table-label'}>Table of {props.location.query.mode || 'expenditures'}</h3>
           <div style={{ marginBottom: '15px' }}>
             You may explore the full dataset in the table below, or <a className="inText" href="http://data.ashevillenc.gov/datasets?q=budget&sort_by=relevance" target="_blank">download here</a>. Click the triangles at left to expand rows for more detail.
           </div>
@@ -173,6 +175,7 @@ const BudgetDetailsTable = (props) => {
               showPagination={false}
               getTdProps={tdProps}
               getTrProps={trProps}
+              ariaLabelledBy={'budget-details-table-label'}
               SubComponent={innerRow1 => (
                 <div style={{ paddingLeft: '34px' }}>
                   <CustomReactTable
@@ -182,6 +185,7 @@ const BudgetDetailsTable = (props) => {
                     showPagination={false}
                     getTdProps={tdProps}
                     getTrProps={trProps}
+                    ariaLabel={`${getDataColumnHeader(1, props.location.query.mode)()} subtable`}
                     SubComponent={innerRow2 => (
                       <div style={{ paddingLeft: '34px' }}>
                         <CustomReactTable
@@ -191,6 +195,7 @@ const BudgetDetailsTable = (props) => {
                           showPagination={false}
                           getTdProps={tdProps}
                           getTrProps={trProps}
+                          ariaLabel={`${getDataColumnHeader(2, props.location.query.mode)()} subtable`}
                           SubComponent={innerRow3 => (
                             <div style={{ paddingLeft: '34px' }}>
                               <ReactTable
@@ -198,6 +203,7 @@ const BudgetDetailsTable = (props) => {
                                 columns={getDataColumns(3, props.location.query.mode)}
                                 defaultPageSize={dataForTable[innerRow1.index].children[innerRow2.index].children[innerRow3.index].children.length}
                                 showPagination={false}
+                                ariaLabel={`${getDataColumnHeader(3, props.location.query.mode)()} subtable`}
                               />
                             </div>
                             )
