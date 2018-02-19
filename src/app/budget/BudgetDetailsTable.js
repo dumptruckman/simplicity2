@@ -33,14 +33,19 @@ const getDollars = (value) => {
   return [initialSymbols, Math.abs(value).toLocaleString()].join('');
 };
 
-const getYearHeader = year => (
-  <div>
-    { last4Years.indexOf(year) > -1 &&
-      <div>{last4YrBudgetTypes[last4Years.indexOf(year)]}</div>
-    }
-    {[year - 1, year.toString().slice(2)].join('-')}
-  </div>
-);
+const getYearHeader = (year) => {
+  // TODO get this header to be read by the screen reader when the cells are read.
+  const yearHeaderText = (last4Years.indexOf(year) > -1 && `${last4YrBudgetTypes[last4Years.indexOf(year)]} `) + [year - 1, year.toString().slice(2)].join('-');
+  // return (
+  //   <div>
+  //     { last4Years.indexOf(year) > -1 &&
+  //       <div>{last4YrBudgetTypes[last4Years.indexOf(year)]}</div>
+  //     }
+  //     {[year - 1, year.toString().slice(2)].join('-')}
+  //   </div>
+  // );
+  return yearHeaderText;
+};
 
 const getChangeHeader = () => (
   <div>Change from <br /> past year</div>
@@ -75,7 +80,10 @@ const getDataColumns = (level, expenseOrRevenue) => {
     {
       Header: getYearHeader(last4Years[0]),
       accessor: 'threeYearsAgo',
-      Cell: props => getDollars(props.value),
+      Cell: (props) => {
+        console.log('props: ', props);
+        return getDollars(props.value);
+      },
       minWidth: 95,
       style: { textAlign: 'right' },
     }, {
@@ -107,21 +115,17 @@ const getDataColumns = (level, expenseOrRevenue) => {
   return dataColumns;
 };
 
-const tdProps = () => {
-  return {
-    style: {
-      whiteSpace: 'normal',
-    },
-  };
-};
+const tdProps = () => ({
+  style: {
+    whiteSpace: 'normal',
+  },
+});
 
-const trProps = () => {
-  return {
-    style: {
-      cursor: 'pointer',
-    },
-  };
-};
+const trProps = () => ({
+  style: {
+    cursor: 'pointer',
+  },
+});
 
 const BudgetDetailsTable = (props) => {
   const dataForTable = props.location.query.mode === 'expenditures' || props.location.query.mode === undefined ? props.expenseTree.children : props.revenueTree.children;
@@ -130,7 +134,8 @@ const BudgetDetailsTable = (props) => {
     browserHistory.push([props.location.pathname, '?entity=', props.location.query.entity, '&id=', props.location.query.id, '&label=', props.location.query.label, '&mode=', value, '&hideNavbar=', props.location.query.hideNavbar].join(''));
   };
 
-  const CustomReactTable = keyboardNavigation(screenReadable(expandingRows(ReactTable)));
+  // const CustomReactTable = keyboardNavigation(screenReadable(expandingRows(ReactTable)));
+  const CustomReactTable = keyboardNavigation(screenReadable(ReactTable));
 
   return (
     <div>

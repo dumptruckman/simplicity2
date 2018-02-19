@@ -11,20 +11,34 @@ const getCustomTrProps = () => ({
   role: 'row',
 });
 
-const getCustomTheadThProps = () => ({
-  role: 'columnheader',
-});
-
 const getCustomTdProps = () => ({
   role: 'gridcell',
 });
 
+// TODO Add support for multi-sortable tables
 export default function screenReadable(WrappedReactTable) {
   class ScreenReadableReactTable extends React.Component {
-    state = {};
+    state = { };
 
-    onSortedChange = () => {
-      this.setState({});
+    onSortedChange = (sorted) => {
+      this.setState({
+        sorted: sorted[0],
+      });
+    };
+
+    getCustomTheadThProps = (state, rowInfo, column) => {
+      const sorted = this.state.sorted;
+      let ariaSort;
+      if (sorted && column.id === sorted.id) {
+        ariaSort = (sorted.desc ? 'descending' : 'ascending');
+      } else {
+        ariaSort = 'none';
+      }
+      return ({
+        'aria-sort': ariaSort,
+        role: 'columnheader',
+        tabIndex: -1,
+      });
     };
 
     getCustomTableProps = () => {
@@ -49,14 +63,18 @@ export default function screenReadable(WrappedReactTable) {
       const newProps = Object.assign({}, this.props);
 
       newProps.getTableProps = mergeProps(this.getCustomTableProps, this.props.getTableProps);
-      newProps.getTrGroupProps = mergeProps(getCustomTrGroupProps, this.props.getTrGroupProps);
+      newProps.getTheadProps = mergeProps(getCustomTrGroupProps, this.props.getTheadProps);
+      // newProps.getTrGroupProps = mergeProps(getCustomTrGroupProps, this.props.getTrGroupProps);
+      newProps.getTbodyProps = mergeProps(getCustomTrGroupProps, this.props.getTbodyProps);
+      // newProps.getTheadTrProps = mergeProps(getCustomTrProps, this.props.getTheadTrProps);
       newProps.getTrProps = mergeProps(getCustomTrProps, this.props.getTrProps);
-      newProps.getTheadThProps = mergeProps(getCustomTheadThProps, this.props.getTheadThProps);
+      newProps.getTheadThProps = mergeProps(this.getCustomTheadThProps, this.props.getTheadThProps);
       newProps.getTdProps = mergeProps(getCustomTdProps, this.props.getTdProps);
 
       return (
         <WrappedReactTable
           {...newProps}
+          onSortedChange={this.onSortedChange}
         />
       );
     }
@@ -68,7 +86,7 @@ export default function screenReadable(WrappedReactTable) {
     ariaDescribedBy: PropTypes.string,
   };
 
-  ScreenReadableReactTable.propTypes = Object.assign({}, WrappedReactTable.propTypes, myPropTypes);
+  ScreenReadableReactTable.propTypes = { ...WrappedReactTable.propTypes, ...myPropTypes };
 
   return ScreenReadableReactTable;
 }
