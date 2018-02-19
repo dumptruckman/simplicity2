@@ -11,9 +11,19 @@ const getCustomTrProps = () => ({
   role: 'row',
 });
 
-const getCustomTdProps = () => ({
-  role: 'gridcell',
-});
+const getCustomTdProps = (state, rowInfo, column) => {
+  console.log('column: ', column);
+  let result = {
+    role: 'gridcell',
+  };
+  if (column.Header && column.Header.props && column.Header.props.id) {
+    result = {
+      'aria-labelledby': `${column.Header.props.id}`,
+      ...result,
+    };
+  }
+  return result;
+};
 
 // TODO Add support for multi-sortable tables
 export default function screenReadable(WrappedReactTable) {

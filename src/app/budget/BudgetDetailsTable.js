@@ -44,7 +44,10 @@ const getYearHeader = (year) => {
   //     {[year - 1, year.toString().slice(2)].join('-')}
   //   </div>
   // );
-  return yearHeaderText;
+  return (
+    <div id={`year-${year}`}>{yearHeaderText}</div>
+  );
+  // return yearHeaderText;
 };
 
 const getChangeHeader = () => (
