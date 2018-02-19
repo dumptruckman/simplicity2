@@ -7,23 +7,17 @@ const getCustomTrGroupProps = () => ({
   role: 'rowgroup',
 });
 
+const getCustomTheadTrProps = () => ({
+  role: 'row',
+});
+
 const getCustomTrProps = () => ({
   role: 'row',
 });
 
-const getCustomTdProps = (state, rowInfo, column) => {
-  console.log('column: ', column);
-  let result = {
-    role: 'gridcell',
-  };
-  if (column.Header && column.Header.props && column.Header.props.id) {
-    result = {
-      'aria-labelledby': `${column.Header.props.id}`,
-      ...result,
-    };
-  }
-  return result;
-};
+const getCustomTdProps = () => ({
+  role: 'gridcell',
+});
 
 // TODO Add support for multi-sortable tables
 export default function screenReadable(WrappedReactTable) {
@@ -76,7 +70,7 @@ export default function screenReadable(WrappedReactTable) {
       newProps.getTheadProps = mergeProps(getCustomTrGroupProps, this.props.getTheadProps);
       // newProps.getTrGroupProps = mergeProps(getCustomTrGroupProps, this.props.getTrGroupProps);
       newProps.getTbodyProps = mergeProps(getCustomTrGroupProps, this.props.getTbodyProps);
-      // newProps.getTheadTrProps = mergeProps(getCustomTrProps, this.props.getTheadTrProps);
+      newProps.getTheadTrProps = mergeProps(getCustomTheadTrProps, this.props.getTheadTrProps);
       newProps.getTrProps = mergeProps(getCustomTrProps, this.props.getTrProps);
       newProps.getTheadThProps = mergeProps(this.getCustomTheadThProps, this.props.getTheadThProps);
       newProps.getTdProps = mergeProps(getCustomTdProps, this.props.getTdProps);

@@ -35,7 +35,7 @@ const getDollars = (value) => {
 
 const getYearHeader = (year) => {
   // TODO get this header to be read by the screen reader when the cells are read.
-  const yearHeaderText = (last4Years.indexOf(year) > -1 && `${last4YrBudgetTypes[last4Years.indexOf(year)]} `) + [year - 1, year.toString().slice(2)].join('-');
+  const yearHeaderText = (last4Years.indexOf(year) > -1 && `${last4YrBudgetTypes[last4Years.indexOf(year)]}<br />`) + [year - 1, year.toString().slice(2)].join('-');
   // return (
   //   <div>
   //     { last4Years.indexOf(year) > -1 &&
@@ -44,10 +44,7 @@ const getYearHeader = (year) => {
   //     {[year - 1, year.toString().slice(2)].join('-')}
   //   </div>
   // );
-  return (
-    <div id={`year-${year}`}>{yearHeaderText}</div>
-  );
-  // return yearHeaderText;
+  return yearHeaderText;
 };
 
 const getChangeHeader = () => (
