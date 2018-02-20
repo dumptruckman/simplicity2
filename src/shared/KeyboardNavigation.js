@@ -1,5 +1,6 @@
 import React from 'react';
 import mergeProps from './mergeProps';
+import PropTypes from "prop-types";
 
 export default function keyboardNavigation(WrappedReactTable) {
   class KeyboardNavigableReactTable extends React.Component {
@@ -8,8 +9,8 @@ export default function keyboardNavigation(WrappedReactTable) {
       this.getCustomTdProps = this.getCustomTdProps.bind(this);
       this.state = {
         focused: {
-          row: 0,
-          column: 0,
+          row: 1,
+          column: 1,
         },
       };
     }
@@ -28,14 +29,15 @@ export default function keyboardNavigation(WrappedReactTable) {
       let focusedRow = this.state.focused.row;
 
       let focused = false;
-      if (this.props.columns[focusedCol].accessor === column.id && focusedRow === rowInfo.viewIndex) {
+      if (this.props.columns[focusedCol - 1].accessor === column.id && focusedRow === rowInfo.viewIndex + 1) {
         focused = true;
       }
 
       return {
         tabIndex: focused ? 0 : -1,
-        'data-row': rowInfo.viewIndex,
+        'data-row': rowInfo.viewIndex + 1,
         'data-col': column.id,
+        'data-parent': this.props.tableId,
         onClick: (e, handleOriginal) => {
           console.log('A Td Element was clicked!');
           console.log('it has this state:', state);
@@ -52,30 +54,52 @@ export default function keyboardNavigation(WrappedReactTable) {
             handleOriginal();
           }
         },
+        onFocus: (e) => {
+          const newFocused = {
+            row: rowInfo.viewIndex + 1,
+            column: this.props.columns.findIndex(c => c.accessor === column.id) + 1,
+          };
+          console.log('focus: ', newFocused);
+          this.setState({
+            focused: newFocused,
+          });
+        },
         onKeyDown: (e) => {
-          console.log(e.target.siblings);
-          if (e.key === 'ArrowLeft') { // left
+          let changed = false;
+          if (e.key === 'ArrowLeft') {
+            changed = true;
             focusedCol -= 1;
-            if (focusedCol < 0) {
-              focusedCol = this.props.columns.length - 1;
+            if (focusedCol < 1) {
+              focusedCol = this.props.columns.length;
             }
-          } else if (e.key === 'ArrowRight') { // right
+          } else if (e.key === 'ArrowRight') {
+            changed = true;
             focusedCol += 1;
-            if (focusedCol >= this.props.columns.length) {
-              focusedCol = 0;
+            if (focusedCol > this.props.columns.length) {
+              focusedCol = 1;
             }
-          } else if (e.key === 'ArrowUp') { // up
+          } else if (e.key === 'ArrowUp') {
+            changed = true;
             focusedRow -= 1;
-          } else if (e.key === 'ArrowDown') { // down
+            if (focusedRow < 1) {
+              focusedRow = state.endRow;
+            }
+          } else if (e.key === 'ArrowDown') {
+            changed = true;
             focusedRow += 1;
+            if (focusedRow > state.endRow) {
+              focusedRow = 1;
+            }
           }
 
-          this.setState({
-            focused: {
-              row: focusedRow,
-              column: focusedCol,
-            },
-          });
+          if (changed) {
+            e.preventDefault();
+            console.log('row: ', focusedRow, ' col: ', focusedCol);
+            console.log('column: ', this.props.columns[focusedCol - 1]);
+
+            const nodes = document.querySelectorAll(`[data-row="${focusedRow}"][data-col="${this.props.columns[focusedCol - 1].accessor}"][data-parent="${this.props.tableId}"]`);
+            nodes[0].focus();
+          }
         },
       };
     }
@@ -103,6 +127,11 @@ export default function keyboardNavigation(WrappedReactTable) {
     }
   }
 
-  KeyboardNavigableReactTable.propTypes = WrappedReactTable.propTypes;
+  const myPropTypes = {
+    tableId: PropTypes.string.isRequired,
+  };
+
+  KeyboardNavigableReactTable.propTypes = { ...WrappedReactTable.propTypes, ...myPropTypes };
+
   return KeyboardNavigableReactTable;
 }

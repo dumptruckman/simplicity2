@@ -81,7 +81,6 @@ const getDataColumns = (level, expenseOrRevenue) => {
       Header: getYearHeader(last4Years[0]),
       accessor: 'threeYearsAgo',
       Cell: (props) => {
-        console.log('props: ', props);
         return getDollars(props.value);
       },
       minWidth: 95,
@@ -180,6 +179,7 @@ const BudgetDetailsTable = (props) => {
               showPagination={false}
               getTdProps={tdProps}
               getTrProps={trProps}
+              tableId={'table-1'}
               ariaLabelledBy={'budget-details-table-label'}
               SubComponent={innerRow1 => (
                 <div style={{ paddingLeft: '34px' }}>
@@ -190,6 +190,7 @@ const BudgetDetailsTable = (props) => {
                     showPagination={false}
                     getTdProps={tdProps}
                     getTrProps={trProps}
+                    tableId={'table-2'}
                     ariaLabel={`${getDataColumnHeader(1, props.location.query.mode)()} subtable`}
                     SubComponent={innerRow2 => (
                       <div style={{ paddingLeft: '34px' }}>
@@ -200,6 +201,7 @@ const BudgetDetailsTable = (props) => {
                           showPagination={false}
                           getTdProps={tdProps}
                           getTrProps={trProps}
+                          tableId={'table-3'}
                           ariaLabel={`${getDataColumnHeader(2, props.location.query.mode)()} subtable`}
                           SubComponent={innerRow3 => (
                             <div style={{ paddingLeft: '34px' }}>
