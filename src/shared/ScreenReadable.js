@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import mergeProps from './mergeProps';
-import Methods from 'react-table';
 
 const getCustomTrGroupProps = () => ({
   role: 'rowgroup',
