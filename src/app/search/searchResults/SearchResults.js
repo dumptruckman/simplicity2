@@ -25,10 +25,10 @@ const getEntities = (selected) => {
   }
   const entityTypes = selected.split(',');
   const entities = [
-    { label: 'Neighborhoods', type: 'neighborhood', checked: true },
-    { label: 'Streets', type: 'street', checked: true },
     { label: 'Addresses', type: 'address', checked: true },
     { label: 'Properties', type: 'property', checked: true },
+    { label: 'Neighborhoods', type: 'neighborhood', checked: true },
+    { label: 'Streets', type: 'street', checked: true },
     { label: 'Owners', type: 'owner', checked: true },
     { label: 'Google places', type: 'google', checked: true },
   ];
@@ -169,13 +169,6 @@ SearchResults.propTypes = {
   searchEntities: PropTypes.arrayOf(PropTypes.shape({ label: PropTypes.string, type: PropTypes.string, check: PropTypes.bool })),
 };
 
-const mapStateToProps = (state, ownProps) => (
-  {
-    //searchText: state.search.text,
-    searchEntities: ownProps.location.query.entities !== undefined ? getEntities(ownProps.location.query.entities) : getEntities('address,property,neighborhood,street,owner,google'),
-  }
-);
-
 const searchQuery = gql`
   query searchQuery($searchString: String!, $searchContexts: [String]) {
     search(searchString: $searchString, searchContexts: $searchContexts) {
@@ -220,6 +213,6 @@ const searchQuery = gql`
 `;
 
 export default graphql(searchQuery, {
-  skip: ownProps => (!ownProps.searchText),
-  options: ownProps => ({ variables: { searchString: ownProps.searchText, searchContexts: getEntitiesToSearch(ownProps.location.query.entities !== undefined ? getEntities(ownProps.location.query.entities) : getEntities('address,property,neighborhood,street,owner,google')) } }),
+  skip: ownProps => (!ownProps.searchText || ownProps.searchText.trim().length < 4),
+  options: ownProps => ({ variables: { searchString: ownProps.searchText.trim(), searchContexts: getEntitiesToSearch(ownProps.location.query.entities !== undefined ? getEntities(ownProps.location.query.entities) : getEntities('address,property,neighborhood,street,owner,google')) } }),
 })(SearchResults);

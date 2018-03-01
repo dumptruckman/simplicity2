@@ -128,7 +128,7 @@ const CrimesByNeighborhood = props => {
   ));
 
   const refreshLocation = (view) => {
-    browserHistory.push([props.location.pathname, '?entity=', props.location.query.entity, '&id=', props.location.query.id, '&label=', props.location.query.label, '&within=', document.getElementById('extent').value, '&during=', document.getElementById('time').value, '&hideNavbar=', props.location.query.hideNavbar, '&search=', props.location.query.search, '&view=', view, '&x=', props.location.query.x, '&y=', props.location.query.y].join(''));
+    browserHistory.push([props.location.pathname, '?entity=', props.location.query.entity, '&id=', props.location.query.id, '&entities=', props.location.query.entities, '&label=', props.location.query.label, '&within=', document.getElementById('extent').value, '&during=', document.getElementById('time').value, '&hideNavbar=', props.location.query.hideNavbar, '&search=', props.location.query.search, '&view=', view, '&x=', props.location.query.x, '&y=', props.location.query.y].join(''));
   };
 
   return (
@@ -222,7 +222,7 @@ const getCrimesQuery = gql`
 const CrimesByNeighborhoodGQL = graphql(getCrimesQuery, {
   options: ownProps => ({
     variables: {
-      nbrhd_ids: [ownProps.location.query.id],
+      nbrhd_ids: [ownProps.location.query.id.trim()],
       before: ownProps.before,
       after: ownProps.after,
     },
