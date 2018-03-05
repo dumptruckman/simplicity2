@@ -1,6 +1,6 @@
 import React from 'react';
-import mergeProps from './mergeProps';
 import PropTypes from 'prop-types';
+import mergeProps from './mergeProps';
 
 const getDataColValue = (column) => {
   if (column.id) {
@@ -9,13 +9,38 @@ const getDataColValue = (column) => {
   return column.expander && 'rt-expandable';
 };
 
-export default function keyboardNavigation(WrappedReactTable) {
+const getCustomTrGroupProps = () => ({
+  role: 'rowgroup',
+});
+
+const getCustomTheadTrProps = () => ({
+  role: 'row',
+});
+
+const getCustomTrProps = () => ({
+  role: 'row',
+});
+
+export default function accessibility(WrappedReactTable) {
   class KeyboardNavigableReactTable extends React.Component {
+    // The presence of a subcomponent means there is an expander arrow column.
+    // This line needs to come before the state.
+    // eslint-disable-next-line
+    hasExpanderCol = !!this.props.SubComponent;
+    columnStartIndex = this.hasExpanderCol ? 0 : 1;
+
     state = {
       focused: {
         row: 1,
-        column: this.hasExpanderCol ? 1 : 0,
+        column: 1,
       },
+    };
+
+    onSortedChange = (sorted) => {
+      // Store the react-table sorted data in this components state.
+      this.setState({
+        sorted: sorted[0],
+      });
     };
 
     onFocus = (rowIndex, column) => () => {
@@ -23,7 +48,7 @@ export default function keyboardNavigation(WrappedReactTable) {
         row: rowIndex,
         column: this.props.columns.findIndex(c => c.accessor === column.id) + 1,
       };
-      console.log('focus: ', newFocused);
+
       this.setState({
         focused: newFocused,
       });
@@ -35,36 +60,63 @@ export default function keyboardNavigation(WrappedReactTable) {
 
       let changed = false;
       if (e.key === 'ArrowLeft') {
-        changed = true;
-        focusedCol -= 1;
-        // Allow 0 index only if there is an expander arrow column
-        if (focusedCol < (this.hasExpanderCol ? 0 : 1)) {
-          focusedCol = this.props.columns.length;
+        if (focusedCol > this.columnStartIndex) {
+          changed = true;
+          focusedCol -= 1;
         }
       } else if (e.key === 'ArrowRight') {
-        changed = true;
-        focusedCol += 1;
-        if (focusedCol > this.props.columns.length) {
-          focusedCol = this.props.SubComponent ? 0 : 1;
+        if (focusedCol < this.props.columns.length) {
+          changed = true;
+          focusedCol += 1;
         }
       } else if (e.key === 'ArrowUp') {
-        changed = true;
-        focusedRow -= 1;
-        if (focusedRow < 0) {
-          focusedRow = rtState.endRow;
+        if (focusedRow > 0) {
+          changed = true;
+          focusedRow -= 1;
         }
       } else if (e.key === 'ArrowDown') {
-        changed = true;
-        focusedRow += 1;
-        if (focusedRow > rtState.endRow) {
+        if (focusedRow < rtState.endRow) {
+          changed = true;
+          focusedRow += 1;
+        }
+      } else if (e.key === 'Home') {
+        if (e.ctrlKey) {
+          if (focusedRow !== 0) {
+            changed = true;
+            focusedRow = 0;
+          }
+        }
+        if (focusedCol !== this.columnStartIndex) {
+          changed = true;
+          focusedCol = this.columnStartIndex;
+        }
+      } else if (e.key === 'End') {
+        if (e.ctrlKey) {
+          if (focusedRow !== rtState.endRow) {
+            changed = true;
+            focusedRow = rtState.endRow;
+          }
+        }
+        if (focusedCol !== this.props.columns.length) {
+          changed = true;
+          focusedCol = this.props.columns.length;
+        }
+      } else if (e.key === 'PageUp') {
+        if (focusedRow !== 0) {
+          changed = true;
           focusedRow = 0;
         }
+      } else if (e.key === 'PageDown') {
+        if (focusedRow !== rtState.endRow) {
+          changed = true;
+          focusedRow = rtState.endRow;
+        }
+      } else if (e.key === 'Enter') {
+        e.target.click();
       }
 
       if (changed) {
         e.preventDefault();
-        console.log('row: ', focusedRow, ' col: ', focusedCol);
-        console.log('column: ', this.props.columns[focusedCol - 1]);
 
         let nodes;
         if (focusedCol === 0 && this.props.SubComponent) {
@@ -77,10 +129,29 @@ export default function keyboardNavigation(WrappedReactTable) {
       }
     };
 
-    getCustomTheadThProps = (state, rowInfo, column, instance) => {
+    getCustomTableProps = () => {
+      const props = {
+        role: 'grid',
+      };
+
+      if (this.props.ariaLabel) {
+        props['aria-label'] = this.props.ariaLabel;
+      } else if (this.props.ariaLabelledBy) {
+        props['aria-labelledby'] = this.props.ariaLabelledBy;
+      }
+
+      if (this.props.ariaDescribedBy) {
+        props['aria-describedby'] = this.props.ariaDescribedBy;
+      }
+
+      return props;
+    };
+
+    getCustomTheadThProps = (state, rowInfo, column) => {
       const focusedCol = this.state.focused.column;
       const focusedRow = this.state.focused.row;
 
+      // Determine if Th is focused
       let focused = false;
       if (focusedRow === 0) {
         if (this.hasExpanderCol && focusedCol === 0) {
@@ -93,24 +164,29 @@ export default function keyboardNavigation(WrappedReactTable) {
         }
       }
 
+      const sorted = this.state.sorted;
+
+      // Determine sorted attribute
+      let ariaSort;
+      if (sorted && column.id === sorted.id) {
+        ariaSort = (sorted.desc ? 'descending' : 'ascending');
+      } else {
+        ariaSort = 'none';
+      }
+
       return {
+        'aria-sort': ariaSort,
+        role: 'columnheader',
         tabIndex: focused ? 0 : -1,
         'data-row': 0,
         'data-col': getDataColValue(column),
         'data-parent': this.props.tableId,
-        onClick: () => {
-          console.log('A Td Element was clicked!');
-          console.log('it has this state:', state);
-          console.log('It was in this column:', column);
-          console.log('It was in this row:', rowInfo);
-          console.log('It was in this instance:', instance);
-        },
         onFocus: this.onFocus(0, column),
         onKeyDown: this.onKeyDown(state),
       };
     };
 
-    getCustomTdProps = (state, rowInfo, column, instance) => {
+    getCustomTdProps = (state, rowInfo, column) => {
       const focusedCol = this.state.focused.column;
       const focusedRow = this.state.focused.row;
 
@@ -132,38 +208,27 @@ export default function keyboardNavigation(WrappedReactTable) {
       }
 
       return {
+        role: 'gridcell',
         tabIndex: focused ? 0 : -1,
         'data-row': rowInfo.viewIndex + 1,
         'data-col': getDataColValue(column),
         'data-parent': this.props.tableId,
-        onClick: (e, handleOriginal) => {
-          console.log('A Td Element was clicked!');
-          console.log('it has this state:', state);
-          console.log('It was in this column:', column);
-          console.log('It was in this row:', rowInfo);
-          console.log('It was in this instance:', instance);
-          // console.log('It was in this table instance:', instance);
-
-          // IMPORTANT! React-Table uses onClick internally to trigger
-          // events like expanding SubComponents and pivots.
-          // By default a custom 'onClick' handler will override this functionality.
-          // If you want to fire the original onClick handler, call the
-          // 'handleOriginal' function.
-          if (handleOriginal) {
-            handleOriginal();
-          }
-        },
         onFocus: this.onFocus(rowInfo.viewIndex + 1, column),
         onKeyDown: this.onKeyDown(state),
       };
     };
 
-    // The presence of a subcomponent means there is an expander arrow column.
-    hasExpanderCol = !!this.props.SubComponent;
-
     render() {
       const newProps = { ...this.props };
 
+      // Table parts that use stateless prop callbacks
+      newProps.getTheadProps = mergeProps(getCustomTrGroupProps, this.props.getTheadProps);
+      newProps.getTbodyProps = mergeProps(getCustomTrGroupProps, this.props.getTbodyProps);
+      newProps.getTheadTrProps = mergeProps(getCustomTheadTrProps, this.props.getTheadTrProps);
+      newProps.getTrProps = mergeProps(getCustomTrProps, this.props.getTrProps);
+
+      // Table parts that use stateful prop callbacks
+      newProps.getTableProps = mergeProps(this.getCustomTableProps, this.props.getTableProps);
       newProps.getTheadThProps = mergeProps(this.getCustomTheadThProps, this.props.getTheadThProps);
       newProps.getTdProps = mergeProps(this.getCustomTdProps, this.props.getTdProps);
 
@@ -172,6 +237,7 @@ export default function keyboardNavigation(WrappedReactTable) {
       return (
         <WrappedReactTable
           {...newProps}
+          onSortedChange={this.onSortedChange}
         />
       );
     }
@@ -179,6 +245,9 @@ export default function keyboardNavigation(WrappedReactTable) {
 
   const myPropTypes = {
     tableId: PropTypes.string.isRequired,
+    ariaLabel: PropTypes.string,
+    ariaLabelledBy: PropTypes.string,
+    ariaDescribedBy: PropTypes.string,
   };
 
   KeyboardNavigableReactTable.propTypes = { ...WrappedReactTable.propTypes, ...myPropTypes };

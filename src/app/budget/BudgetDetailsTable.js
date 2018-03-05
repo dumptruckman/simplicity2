@@ -4,8 +4,7 @@ import { graphql } from 'react-apollo';
 import { browserHistory } from 'react-router';
 import ReactTable from 'react-table';
 import { RadioGroup, Radio } from 'react-radio-group';
-import keyboardNavigation from '../../shared/KeyboardNavigation';
-import screenReadable from '../../shared/ScreenReadable';
+import accessibility from '../../shared/Accessibility';
 import expandingRows from '../../shared/ExpandingRows';
 import Collapsible from '../../shared/Collapsible';
 import { getBudgetTrees } from './graphql/budgetQueries';
@@ -133,8 +132,9 @@ const BudgetDetailsTable = (props) => {
     browserHistory.push([props.location.pathname, '?entity=', props.location.query.entity, '&id=', props.location.query.id, '&entities=', props.location.query.entities, '&label=', props.location.query.label, '&mode=', value, '&hideNavbar=', props.location.query.hideNavbar].join(''));
   };
 
-  // const CustomReactTable = keyboardNavigation(screenReadable(expandingRows(ReactTable)));
-  const CustomReactTable = keyboardNavigation(screenReadable(ReactTable));
+  // const CustomReactTable = accessibility(screenReadable(expandingRows(ReactTable)));
+  const CustomReactTable = accessibility(ReactTable);
+  const ExpandableCustomReactTable = expandingRows(CustomReactTable);
 
   return (
     <div>
@@ -172,7 +172,7 @@ const BudgetDetailsTable = (props) => {
       <div className="row">
         <div className="col-sm-12">
           <div alt={['Table of', (props.location.query.mode || 'expenditures')].join(' ')}>
-            <CustomReactTable
+            <ExpandableCustomReactTable
               data={dataForTable}
               columns={getDataColumns(0, props.location.query.mode)}
               pageSize={dataForTable.length}
@@ -183,7 +183,7 @@ const BudgetDetailsTable = (props) => {
               ariaLabelledBy={'budget-details-table-label'}
               SubComponent={innerRow1 => (
                 <div style={{ paddingLeft: '34px' }}>
-                  <CustomReactTable
+                  <ExpandableCustomReactTable
                     data={dataForTable[innerRow1.index].children}
                     columns={getDataColumns(1, props.location.query.mode)}
                     defaultPageSize={dataForTable[innerRow1.index].children.length}
@@ -194,7 +194,7 @@ const BudgetDetailsTable = (props) => {
                     ariaLabel={`${getDataColumnHeader(1, props.location.query.mode)()} subtable`}
                     SubComponent={innerRow2 => (
                       <div style={{ paddingLeft: '34px' }}>
-                        <CustomReactTable
+                        <ExpandableCustomReactTable
                           data={dataForTable[innerRow1.index].children[innerRow2.index].children}
                           columns={getDataColumns(2, props.location.query.mode)}
                           defaultPageSize={dataForTable[innerRow1.index].children[innerRow2.index].children.length}
@@ -205,7 +205,7 @@ const BudgetDetailsTable = (props) => {
                           ariaLabel={`${getDataColumnHeader(2, props.location.query.mode)()} subtable`}
                           SubComponent={innerRow3 => (
                             <div style={{ paddingLeft: '34px' }}>
-                              <ReactTable
+                              <CustomReactTable
                                 data={dataForTable[innerRow1.index].children[innerRow2.index].children[innerRow3.index].children}
                                 columns={getDataColumns(3, props.location.query.mode)}
                                 defaultPageSize={dataForTable[innerRow1.index].children[innerRow2.index].children[innerRow3.index].children.length}
