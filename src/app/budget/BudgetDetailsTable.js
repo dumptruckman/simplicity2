@@ -32,16 +32,14 @@ const getDollars = (value) => {
   return [initialSymbols, Math.abs(value).toLocaleString()].join('');
 };
 
-const getYearHeader = (year) => {
-  return (
-    <div>
-      { last4Years.indexOf(year) > -1 &&
-        <div>{last4YrBudgetTypes[last4Years.indexOf(year)]}</div>
+const getYearHeader = year => (
+  <div>
+    { last4Years.indexOf(year) > -1 &&
+    <div>{last4YrBudgetTypes[last4Years.indexOf(year)]}</div>
       }
-      {[year - 1, year.toString().slice(2)].join('-')}
-    </div>
-  );
-};
+    {[year - 1, year.toString().slice(2)].join('-')}
+  </div>
+);
 
 const getChangeHeader = () => (
   <div>Change from <br /> past year</div>
@@ -79,9 +77,7 @@ const getDataColumns = (level, expenseOrRevenue) => {
     {
       Header: getYearHeader(last4Years[0]),
       accessor: 'threeYearsAgo',
-      Cell: (props) => {
-        return getDollars(props.value);
-      },
+      Cell: props => getDollars(props.value),
       minWidth: 95,
       style: { textAlign: 'right' },
     }, {
