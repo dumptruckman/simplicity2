@@ -1,13 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { graphql } from 'react-apollo';
-import { browserHistory } from 'react-router';
 import ReactTable from 'react-table';
 import { RadioGroup, Radio } from 'react-radio-group';
-import accessibility from '../../shared/Accessibility';
-import expandingRows from '../../shared/ExpandingRows';
+import accessibility from '../../shared/react_table_hoc/Accessibility';
+import expandingRows from '../../shared/react_table_hoc/ExpandingRows';
 import Collapsible from '../../shared/Collapsible';
 import { getBudgetTrees } from './graphql/budgetQueries';
+import { refreshLocation } from '../../utilities/generalUtilities';
 
 const last4Years = [
   2015,
@@ -36,7 +36,7 @@ const getYearHeader = year => (
   <div>
     { last4Years.indexOf(year) > -1 &&
     <div>{last4YrBudgetTypes[last4Years.indexOf(year)]}</div>
-      }
+    }
     {[year - 1, year.toString().slice(2)].join('-')}
   </div>
 );
@@ -124,19 +124,21 @@ const trProps = () => ({
 const BudgetDetailsTable = (props) => {
   const dataForTable = props.location.query.mode === 'expenditures' || props.location.query.mode === undefined ? props.expenseTree.children : props.revenueTree.children;
 
-  const refreshLocation = (value) => {
-    browserHistory.push([props.location.pathname, '?entity=', props.location.query.entity, '&id=', props.location.query.id, '&entities=', props.location.query.entities, '&label=', props.location.query.label, '&mode=', value, '&hideNavbar=', props.location.query.hideNavbar].join(''));
-  };
+  const getNewUrlParams = mode => (
+    {
+      mode,
+      nodePath: 'root',
+    }
+  );
 
-  // const CustomReactTable = accessibility(screenReadable(expandingRows(ReactTable)));
-  const CustomReactTable = accessibility(ReactTable);
-  const ExpandableCustomReactTable = expandingRows(CustomReactTable);
+  const AccessibleReactTable = accessibility(ReactTable);
+  const ExpandableAccessibleReactTable = expandingRows(AccessibleReactTable);
 
   return (
     <div>
       <div className="row">
         <div className="col-sm-12">
-          <h3 id={'budget-details-table-label'}>Table of {props.location.query.mode || 'expenditures'}</h3>
+          <h3 id={'budget-details-table-label'}>{`Table of ${props.location.query.mode || 'expenditures'}`}</h3>
           <div style={{ marginBottom: '15px' }}>
             You may explore the full dataset in the table below, or <a className="inText" href="http://data.ashevillenc.gov/datasets?q=budget&sort_by=relevance" target="_blank">download here</a>. Click the triangles at left to expand rows for more detail.
           </div>
@@ -145,7 +147,7 @@ const BudgetDetailsTable = (props) => {
       <div className="row">
         <div className="col-sm-12">
           <div className="radioGroup pull-right" style={{ marginBottom: '3px' }}>
-            <RadioGroup name="tableRadios" selectedValue={props.location.query.mode || 'expenditures'} onChange={refreshLocation}>
+            <RadioGroup name="tableRadios" id="tableRadios" selectedValue={props.location.query.mode || 'expenditures'} onChange={value => refreshLocation(getNewUrlParams(value), props.location)}>
               <label>
                 <Radio value="expenditures" />Expenditures
               </label>
@@ -168,7 +170,7 @@ const BudgetDetailsTable = (props) => {
       <div className="row">
         <div className="col-sm-12">
           <div alt={['Table of', (props.location.query.mode || 'expenditures')].join(' ')}>
-            <ExpandableCustomReactTable
+            <ExpandableAccessibleReactTable
               data={dataForTable}
               columns={getDataColumns(0, props.location.query.mode)}
               pageSize={dataForTable.length}
@@ -179,7 +181,7 @@ const BudgetDetailsTable = (props) => {
               ariaLabelledBy={'budget-details-table-label'}
               SubComponent={innerRow1 => (
                 <div style={{ paddingLeft: '34px' }}>
-                  <ExpandableCustomReactTable
+                  <ExpandableAccessibleReactTable
                     data={dataForTable[innerRow1.index].children}
                     columns={getDataColumns(1, props.location.query.mode)}
                     defaultPageSize={dataForTable[innerRow1.index].children.length}
@@ -190,7 +192,7 @@ const BudgetDetailsTable = (props) => {
                     ariaLabel={`${getDataColumnHeader(1, props.location.query.mode)()} subtable`}
                     SubComponent={innerRow2 => (
                       <div style={{ paddingLeft: '34px' }}>
-                        <ExpandableCustomReactTable
+                        <ExpandableAccessibleReactTable
                           data={dataForTable[innerRow1.index].children[innerRow2.index].children}
                           columns={getDataColumns(2, props.location.query.mode)}
                           defaultPageSize={dataForTable[innerRow1.index].children[innerRow2.index].children.length}
@@ -201,7 +203,7 @@ const BudgetDetailsTable = (props) => {
                           ariaLabel={`${getDataColumnHeader(2, props.location.query.mode)()} subtable`}
                           SubComponent={innerRow3 => (
                             <div style={{ paddingLeft: '34px' }}>
-                              <CustomReactTable
+                              <AccessibleReactTable
                                 data={dataForTable[innerRow1.index].children[innerRow2.index].children[innerRow3.index].children}
                                 columns={getDataColumns(3, props.location.query.mode)}
                                 defaultPageSize={dataForTable[innerRow1.index].children[innerRow2.index].children[innerRow3.index].children.length}
@@ -209,15 +211,15 @@ const BudgetDetailsTable = (props) => {
                                 ariaLabel={`${getDataColumnHeader(3, props.location.query.mode)()} subtable`}
                               />
                             </div>
-                            )
+                          )
                           }
                         />
                       </div>
-                      )
+                    )
                     }
                   />
                 </div>
-                )
+              )
               }
             />
           </div>
