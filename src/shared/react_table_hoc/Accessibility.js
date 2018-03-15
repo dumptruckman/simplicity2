@@ -26,7 +26,7 @@ const getCustomTrProps = () => ({
 });
 
 export default function accessibility(WrappedReactTable) {
-  class KeyboardNavigableReactTable extends React.Component {
+  class AccessibleReactTable extends React.Component {
     // The presence of a subcomponent means there is an expander arrow column.
     // This line needs to come before the state.
     hasExpanderCol = !!this.props.SubComponent;
@@ -69,7 +69,7 @@ export default function accessibility(WrappedReactTable) {
       });
     };
 
-    onFocus = (rowIndex, column) => () => {
+    onFocus = (rowIndex, column) => (e) => {
       const newFocused = {
         row: rowIndex,
         column: this.getColumns().findIndex(c => (c.id ? c.id === column.id : c.accessor === column.id)) + 1,
@@ -80,10 +80,9 @@ export default function accessibility(WrappedReactTable) {
       });
     };
 
-    onKeyDown = rtState => (e) => {
-      let focusedCol = this.state.focused.column;
-      let focusedRow = this.state.focused.row;
-      const columns = this.getColumns();
+    keyDownHandler = (rtState, e, row, col, columns) => {
+      let focusedRow = row;
+      let focusedCol = col;
 
       let changed = false;
       if (e.key === 'ArrowLeft') {
@@ -147,9 +146,18 @@ export default function accessibility(WrappedReactTable) {
 
         const nodes = document.querySelectorAll(`[data-row="${focusedRow}"][data-col="${this.getColumnId(focusedCol)}"][data-parent="${this.props.tableId}"]`);
         if (nodes[0]) {
-          nodes[0].focus();
+          if (nodes[0].offsetParent) {
+            // a non-null offsetParent means the element is visible and therefore focusable.
+            nodes[0].focus();
+          } else {
+            this.keyDownHandler(rtState, e, focusedRow, focusedCol, columns);
+          }
         }
       }
+    };
+
+    onKeyDown = rtState => (e) => {
+      this.keyDownHandler(rtState, e, this.state.focused.row, this.state.focused.column, this.getColumns());
     };
 
     isFocused = (row, column) => {
@@ -271,13 +279,18 @@ export default function accessibility(WrappedReactTable) {
   }
 
   const myPropTypes = {
-    tableId: PropTypes.string.isRequired,
+    tableId: PropTypes.string,
     ariaLabel: PropTypes.string,
     ariaLabelledBy: PropTypes.string,
     ariaDescribedBy: PropTypes.string,
   };
 
-  KeyboardNavigableReactTable.propTypes = { ...WrappedReactTable.propTypes, ...myPropTypes };
+  const myDefaultProps = {
+    tableId: '',
+  };
 
-  return KeyboardNavigableReactTable;
+  AccessibleReactTable.propTypes = { ...WrappedReactTable.propTypes, ...myPropTypes };
+  AccessibleReactTable.defaultProps = { ...WrappedReactTable.defaultProps, ...myDefaultProps };
+
+  return AccessibleReactTable;
 }
