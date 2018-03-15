@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import debounce from 'lodash/debounce';
 import mergeProps from './mergeProps';
 
 const getDataColValue = (column) => {
@@ -42,6 +43,10 @@ export default function accessibility(WrappedReactTable) {
       },
     };
 
+    initializeIndices = () => {
+      // console.log(WrappedReactTable.state);
+    };
+
     getColumns = () => {
       let columns = this.props.columns;
       if (columns[0].columns) {
@@ -69,7 +74,7 @@ export default function accessibility(WrappedReactTable) {
       });
     };
 
-    onFocus = (rowIndex, column) => (e) => {
+    onFocus = (rowIndex, column) => () => {
       const newFocused = {
         row: rowIndex,
         column: this.getColumns().findIndex(c => (c.id ? c.id === column.id : c.accessor === column.id)) + 1,
@@ -236,6 +241,7 @@ export default function accessibility(WrappedReactTable) {
     });
 
     getCustomTdProps = (state, rowInfo, column) => {
+      console.log('hilo');
       if (rowInfo) {
         return ({
           role: 'gridcell',
@@ -249,6 +255,11 @@ export default function accessibility(WrappedReactTable) {
       }
       return {};
     };
+
+    componentDidMount() {
+      this.initializeIndices();
+      window.onresize = debounce(this.initializeIndices, 200);
+    }
 
     render() {
       const newProps = { ...this.props };
