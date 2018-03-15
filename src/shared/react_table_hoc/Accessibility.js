@@ -42,20 +42,13 @@ export default function accessibility(WrappedReactTable) {
       },
     };
 
-    getColumns = () => {
-      let columns = this.props.columns;
-      if (columns[0].columns) {
-        // For some reason some of the tables puts the columns array inside of another array.
-        columns = columns[0].columns;
-      }
-      return columns;
-    };
+    getColumns = rtState => rtState.allVisibleColumns;
 
-    getColumnId = (colIndex) => {
+    getColumnId = (rtState, colIndex) => {
       if (colIndex === 0) {
         return 'rt-expandable';
       }
-      const column = this.getColumns()[colIndex - 1];
+      const column = this.getColumns(rtState)[colIndex - 1];
       if (column.id) {
         return column.id;
       }
@@ -69,10 +62,10 @@ export default function accessibility(WrappedReactTable) {
       });
     };
 
-    onFocus = (rowIndex, column) => () => {
+    onFocus = (rtState, rowIndex, column) => () => {
       const newFocused = {
         row: rowIndex,
-        column: this.getColumns().findIndex(c => (c.id ? c.id === column.id : c.accessor === column.id)) + 1,
+        column: this.getColumns(rtState).findIndex(c => (c.id ? c.id === column.id : c.accessor === column.id)) + 1,
       };
 
       this.setState({
@@ -83,7 +76,7 @@ export default function accessibility(WrappedReactTable) {
     onKeyDown = rtState => (e) => {
       let focusedCol = this.state.focused.column;
       let focusedRow = this.state.focused.row;
-      const columns = this.getColumns();
+      const columns = this.getColumns(rtState);
 
       let changed = false;
       if (e.key === 'ArrowLeft') {
@@ -145,14 +138,14 @@ export default function accessibility(WrappedReactTable) {
       if (changed) {
         e.preventDefault();
 
-        const nodes = document.querySelectorAll(`[data-row="${focusedRow}"][data-col="${this.getColumnId(focusedCol)}"][data-parent="${this.props.tableId}"]`);
+        const nodes = document.querySelectorAll(`[data-row="${focusedRow}"][data-col="${this.getColumnId(rtState, focusedCol)}"][data-parent="${this.props.tableId}"]`);
         if (nodes[0]) {
           nodes[0].focus();
         }
       }
     };
 
-    isFocused = (row, column) => {
+    isFocused = (rtState, row, column) => {
       const focusedCol = this.state.focused.column;
       const focusedRow = this.state.focused.row;
 
@@ -168,7 +161,7 @@ export default function accessibility(WrappedReactTable) {
             // The expander arrow column doesn't have a column id so it is a special case
             focused = true;
           }
-        } else if (this.getColumns()[focusedCol - 1].accessor === column.id) {
+        } else if (this.getColumns(rtState)[focusedCol - 1].accessor === column.id) {
           focused = true;
         }
       }
@@ -176,7 +169,9 @@ export default function accessibility(WrappedReactTable) {
       return focused;
     };
 
-    getCustomTableProps = () => {
+    getCustomTableProps = (state) => {
+      console.log('table state: ', state);
+
       const props = {
         role: 'grid',
       };
@@ -208,22 +203,22 @@ export default function accessibility(WrappedReactTable) {
       return {
         'aria-sort': ariaSort,
         role: 'columnheader',
-        tabIndex: this.isFocused(0, column) ? 0 : -1,
+        tabIndex: this.isFocused(state, 0, column) ? 0 : -1,
         'data-row': 0,
         'data-col': getDataColValue(column),
         'data-parent': this.props.tableId,
-        onFocus: this.onFocus(0, column),
+        onFocus: this.onFocus(state, 0, column),
         onKeyDown: this.onKeyDown(state),
       };
     };
 
     getCustomTheadFilterThProps = (state, rowInfo, column) => ({
       role: 'columnheader', // TODO proper role here?
-      tabIndex: this.isFocused(1, column) ? 0 : -1,
+      tabIndex: this.isFocused(state, 1, column) ? 0 : -1,
       'data-row': 1,
       'data-col': getDataColValue(column),
       'data-parent': this.props.tableId,
-      onFocus: this.onFocus(1, column),
+      onFocus: this.onFocus(state, 1, column),
       onKeyDown: this.onKeyDown(state),
     });
 
@@ -231,11 +226,11 @@ export default function accessibility(WrappedReactTable) {
       if (rowInfo) {
         return ({
           role: 'gridcell',
-          tabIndex: this.isFocused(rowInfo.viewIndex + 1 + this.extraHeaderRowCount, column) ? 0 : -1,
+          tabIndex: this.isFocused(state, rowInfo.viewIndex + 1 + this.extraHeaderRowCount, column) ? 0 : -1,
           'data-row': rowInfo.viewIndex + 1 + this.extraHeaderRowCount,
           'data-col': getDataColValue(column),
           'data-parent': this.props.tableId,
-          onFocus: this.onFocus(rowInfo.viewIndex + 1 + this.extraHeaderRowCount, column),
+          onFocus: this.onFocus(state, rowInfo.viewIndex + 1 + this.extraHeaderRowCount, column),
           onKeyDown: this.onKeyDown(state),
         });
       }
