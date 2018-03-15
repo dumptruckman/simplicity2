@@ -1,4 +1,5 @@
 import { ApolloClient } from 'apollo-client';
+import fetch from 'unfetch';
 import { createHttpLink } from 'apollo-link-http';
 import firebase from 'firebase';
 import { ApolloLink } from 'apollo-link';
@@ -13,23 +14,29 @@ if (process.env.USE_LOCAL_API === 'true') {
   SERVER_URL = 'http://localhost:8080/graphql';
 }
 
-const httpLink = createHttpLink({ uri: SERVER_URL });
+const httpLink = createHttpLink({ uri: SERVER_URL, fetch });
 
 const middlewareLink = setContext(
   request =>
     new Promise((success, fail) => {
       const signedInUser = firebase.auth().currentUser;
       if (signedInUser) {
-        signedInUser.getIdToken()
+        signedInUser.getIdToken(true)
         .then((idToken) => {
           sessionStorage.setItem('token', idToken);
+          setTimeout(() => {
+            success({ headers: {
+              authorization: idToken,
+            } });
+          }, 10);
         });
+      } else {
+        setTimeout(() => {
+          success({ headers: {
+            authorization: sessionStorage.getItem('token') || null,
+          } });
+        }, 10);
       }
-      setTimeout(() => {
-        success({ headers: {
-          authorization: sessionStorage.getItem('token') || null,
-        } });
-      }, 10);
     })
 );
 const link = middlewareLink.concat(httpLink);
